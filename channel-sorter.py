@@ -22,7 +22,6 @@ def sort_channels():
 
 
 def sort_nodes(channel_names):
-    """Sort channel names into categories based on keywords."""
     material_aov_keywords = [
         "diffuse", "specular", "reflection", "refraction", "normal", "glossiness", 
         "roughness", "metallic", "ambient occlusion", "emission", "depth", 
@@ -192,7 +191,7 @@ def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
                 x_shuffle = x_shuffle + 110
                 shuffle_node = nuke.createNode('Shuffle2')
                 shuffle_node.knob('in1').setValue(selection)
-                shuffle_node.knob('name').setValue(f"{selection}_{iteration_number}")  # Assign unique name
+                shuffle_node.knob('name').setValue(f"{selection}_{iteration_number}")  
                 shuffle_node.setInput(0, unpremult_node)
                 shuffle_node.setXpos(x_shuffle)
                 shuffle_node.setYpos(y_shuffle + 60)
@@ -216,14 +215,14 @@ def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
                 create_backdrop(sorted_nodes, iteration_number)
 
 
-            self.accept()  # Close the dialog
+            self.accept()  
 
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
     dialog = ChannelSelectionDialog(sorted_channel, selected_node)
     dialog.exec_()
 
-# Run the function in Nuke
+
 sort_channels()
 
 nuke.menu('Nuke').addCommand('Tools/Sort Channels', sort_channels)
