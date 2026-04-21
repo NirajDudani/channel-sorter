@@ -29,7 +29,7 @@ Or click **Code → Download ZIP** on the GitHub page and extract it.
 
 ### Step 2 — Copy the Script
 
-Copy `channel-sorter.py` into your `.nuke` directory. The `.nuke` folder lives in your home directory by default:
+Copy `channel_sorter.py` into your `.nuke` directory. The `.nuke` folder lives in your home directory by default:
 
 | OS | Default Path |
 |----|-------------|
@@ -39,11 +39,7 @@ Copy `channel-sorter.py` into your `.nuke` directory. The `.nuke` folder lives i
 
 > **Tip:** If you don't see a `.nuke` folder, open Nuke once and it will create one automatically. On Windows and macOS, hidden folders may not show by default — enable "Show hidden files" in your file browser.
 
-### Step 3 — Rename the File
-
-**Important:** Rename `channel-sorter.py` to `channel_sorter.py` (hyphen → underscore). Python cannot import modules whose filenames contain hyphens, so `import channel-sorter` will fail.
-
-### Step 4 — Register the Script
+### Step 3 — Register the Script
 
 Open (or create) the file `menu.py` inside your `.nuke` directory and add this single line:
 
@@ -51,7 +47,7 @@ Open (or create) the file `menu.py` inside your `.nuke` directory and add this s
 import channel_sorter
 ```
 
-### Step 5 — Restart Nuke
+### Step 4 — Restart Nuke
 
 Close and reopen Nuke. You should now see a new menu entry at **Nuke → Tools → Sort Channels**.
 
@@ -146,9 +142,8 @@ Edit these lists to match your studio's naming conventions (Arnold `RGBA_*`, V-R
 
 | Problem | Fix |
 |---------|-----|
-| Menu entry doesn't appear | Make sure the file is named `channel_sorter.py` (underscore, not hyphen) and lives directly inside `.nuke/`. Check Nuke's Script Editor for import errors. |
-| `ModuleNotFoundError: No module named 'channel_sorter'` | The filename probably still has a hyphen. Rename it to `channel_sorter.py`. |
-| `SyntaxError: invalid syntax` on the `import channel-sorter` line | Same issue — Python can't import hyphenated names. Rename the file and the import line to use an underscore. |
+| Menu entry doesn't appear | Make sure the file is named `channel_sorter.py` and lives directly inside `.nuke/`. Check Nuke's Script Editor for import errors. |
+| `ModuleNotFoundError: No module named 'channel_sorter'` | The file isn't in `.nuke/`, or Nuke is looking at a different `.nuke` folder (custom `NUKE_PATH` env var). Run `import os; print(os.path.expanduser("~/.nuke"))` in Nuke's Script Editor to confirm the expected location. |
 | The tool runs automatically when Nuke starts | The script calls `sort_channels()` at module load. Remove or comment out the standalone `sort_channels()` call near the bottom of the file — only the `nuke.menu(...).addCommand(...)` line should remain at module level. |
 | "No node selected" / the tool errors out | Select a node in the Node Graph before launching. The tool reads channels from `nuke.selectedNode()` and needs exactly one selection. |
 | Some AOVs don't end up in any backdrop | Only channels whose names match a keyword in the four categories are sorted. Unmatched channels are skipped. Add your naming pattern to `material_aov_keywords` or `utilities`. |
