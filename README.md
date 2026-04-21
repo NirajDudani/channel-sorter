@@ -160,16 +160,6 @@ Edit these lists to match your studio's naming conventions (Arnold `RGBA_*`, V-R
 
 ---
 
-## Roadmap
-
-- [ ] Remove the module-level `sort_channels()` call so the tool only fires from the menu
-- [ ] Wrap the whole build in a single `nuke.Undo()` block so one Ctrl+Z reverts everything
-- [ ] Configurable keyword lists via a JSON config file (no code edits required)
-- [ ] "Select all / None" buttons in the checkbox dialog
-- [ ] Per-category backdrop color presets
-- [ ] Dry-run preview showing which nodes *would* be created
-
----
 
 ## Contributing
 
