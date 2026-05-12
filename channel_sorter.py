@@ -2,7 +2,11 @@ import nuke
 import nukescripts
 
 def sort_channels():
-    selected_node = nuke.selectedNode()
+    try:
+        selected_node = nuke.selectedNode()
+    except RuntimeError:
+        nuke.message("Channel Sorter: Please select a node first.")
+        return
 
     channels = selected_node.channels()
     channel = []
@@ -38,16 +42,20 @@ def sort_nodes(channel_names):
         "IDs": []
     }
     
+    import re
+
     for channel in channel_names:
-        channel_lower = channel.lower() 
+        channel_lower = channel.lower()
 
         if "light" in channel_lower or "rgba" in channel_lower:
             sorted_channels["Light Groups"].append(channel)
-        elif "id" in channel_lower:
+        elif re.search(r'\bid\b', channel_lower):
             sorted_channels["IDs"].append(channel)
         elif any(keyword in channel_lower for keyword in material_aov_keywords):
             sorted_channels["Material AOVs"].append(channel)
         elif any(keyword in channel_lower for keyword in utilities):
+            sorted_channels["Utilities"].append(channel)
+        else:
             sorted_channels["Utilities"].append(channel)
 
     return sorted_channels
@@ -194,20 +202,25 @@ def create_checkbox_dialog(sorted_channel, selected_node):
             sorted_nodes = sort_nodes(self.selected_channels)
             combined_nodes = sorted_nodes["Material AOVs"] + sorted_nodes["Light Groups"] + sorted_nodes["Utilities"] + sorted_nodes["IDs"]
 
+            if not combined_nodes:
+                nuke.delete(unpremult_node)
+                nuke.message("Channel Sorter: None of the selected channels matched a known category. No nodes were created.")
+                self.accept()
+                return
+
             for selection in combined_nodes:
                 x_shuffle = x_shuffle + 110
                 shuffle_node = nuke.createNode('Shuffle2')
                 shuffle_node.knob('in1').setValue(selection)
-                shuffle_node.knob('name').setValue(f"{selection}_{iteration_number}")
+                safe_name = selection.replace(' ', '_')
+                shuffle_node.knob('name').setValue(f"{safe_name}_{iteration_number}")
                 shuffle_node.setInput(0, unpremult_node)
                 shuffle_node.setXpos(x_shuffle)
                 shuffle_node.setYpos(y_shuffle + 60)
-                
 
-                base_name = selection.split('_')[0]
+                base_name = safe_name.split('_')[0]
 
                 if base_name in shuffle_nodes:
-                    
                     merge_node = nuke.createNode('Merge2')
                     merge_node.knob('operation').setValue('plus')
                     merge_node.setInput(0, shuffle_nodes[base_name])
