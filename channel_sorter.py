@@ -1,14 +1,9 @@
 import nuke
 import nukescripts
-from PySide2 import QtWidgets
 
-def sort_channels():    
+def sort_channels():
     selected_node = nuke.selectedNode()
 
-    unpremult_node = nuke.createNode('Unpremult', inpanel = False)
-    unpremult_node.setInput(0, selected_node)
-    
-    
     channels = selected_node.channels()
     channel = []
 
@@ -18,7 +13,7 @@ def sort_channels():
 
     sorted_channel = sorted(set(channel))
 
-    create_checkbox_dialog(sorted_channel, selected_node,unpremult_node)
+    create_checkbox_dialog(sorted_channel, selected_node)
 
 
 def sort_nodes(channel_names):
@@ -135,7 +130,11 @@ def create_backdrop(nodes_dict, iteration_number):
 
  
 
-def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
+def create_checkbox_dialog(sorted_channel, selected_node):
+    try:
+        from PySide2 import QtWidgets
+    except ImportError:
+        from PySide6 import QtWidgets
     class ChannelSelectionDialog(QtWidgets.QDialog):
         def __init__(self, channels, node):
             super().__init__()
@@ -172,17 +171,25 @@ def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
             self.selected_channels = []
             shuffle_nodes = {}
 
-            x_shuffle = nuke.selectedNode().xpos()
-            y_shuffle = nuke.selectedNode().ypos()
-
-            x_merge = nuke.selectedNode().xpos()
-            y_merge = nuke.selectedNode().ypos()
-
-            iteration_number = get_next_iteration_number()  
-
             for cb in self.checkboxes:
                 if cb.isChecked():
                     self.selected_channels.append(cb.text())
+
+            # Nothing selected — close without creating any nodes
+            if not self.selected_channels:
+                self.accept()
+                return
+
+            # Only now create the Unpremult and wire it up
+            unpremult_node = nuke.createNode('Unpremult', inpanel=False)
+            unpremult_node.setInput(0, selected_node)
+
+            x_shuffle = selected_node.xpos()
+            y_shuffle = selected_node.ypos()
+            x_merge = selected_node.xpos()
+            y_merge = selected_node.ypos()
+
+            iteration_number = get_next_iteration_number()
 
             sorted_nodes = sort_nodes(self.selected_channels)
             combined_nodes = sorted_nodes["Material AOVs"] + sorted_nodes["Light Groups"] + sorted_nodes["Utilities"] + sorted_nodes["IDs"]
@@ -191,7 +198,7 @@ def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
                 x_shuffle = x_shuffle + 110
                 shuffle_node = nuke.createNode('Shuffle2')
                 shuffle_node.knob('in1').setValue(selection)
-                shuffle_node.knob('name').setValue(f"{selection}_{iteration_number}")  
+                shuffle_node.knob('name').setValue(f"{selection}_{iteration_number}")
                 shuffle_node.setInput(0, unpremult_node)
                 shuffle_node.setXpos(x_shuffle)
                 shuffle_node.setYpos(y_shuffle + 60)
@@ -217,12 +224,7 @@ def create_checkbox_dialog(sorted_channel, selected_node, unpremult_node):
 
             self.accept()  
 
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-
     dialog = ChannelSelectionDialog(sorted_channel, selected_node)
     dialog.exec_()
 
-
-sort_channels()
-
-nuke.menu('Nuke').addCommand('Tools/Sort Channels', sort_channels)
+nuke.menu('Nuke').addCommand('NDToolKit/Channel Sorter', sort_channels)
